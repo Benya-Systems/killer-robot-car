@@ -20,7 +20,6 @@ import model.detector
 
 
 if __name__ == '__main__':
-    # 指定训练配置文件
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', type=str, default='',
                         help='Specify training profile *.data')
@@ -29,8 +28,6 @@ if __name__ == '__main__':
 
     print("训练配置:")
     print(cfg)
-
-    # 数据集加载
     train_dataset = utils.datasets.TensorDataset(cfg["train"], cfg["width"], cfg["height"], imgaug = True)
     val_dataset = utils.datasets.TensorDataset(cfg["val"], cfg["width"], cfg["height"], imgaug = False)
 
