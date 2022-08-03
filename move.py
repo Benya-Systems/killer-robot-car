@@ -45,15 +45,18 @@ class Mover:
 #             self.pwm1A.start(100)
 #             self.pwm2A.start(90)
         elif movementDir == 'r':
-            self.pwm1A.ChangeFrequency(20)
-            self.pwm2A.ChangeFrequency(10)
+            self.pwm1A.ChangeFrequency(10)
+            self.pwm2A.ChangeFrequency(5)
             self.pwm1A.start(90)
             self.pwm2A.start(50)
         elif movementDir == 'l':
-            self.pwm1A.ChangeFrequency(10)
-            self.pwm2A.ChangeFrequency(20)
+            self.pwm1A.ChangeFrequency(5)
+            self.pwm2A.ChangeFrequency(10)
             self.pwm1A.start(50)
             self.pwm2A.start(90)
+        elif movementDir == 'b':
+            self.pwm1A.stop()
+            self.pwm2A.stop()            
         elif movementDir == 's':
             self.pwm1A.stop()
             self.pwm2A.stop()
@@ -94,7 +97,14 @@ class Mover:
             GPIO.output(self.Motor2A,GPIO.HIGH)
             GPIO.output(self.Motor2B,GPIO.LOW)
             GPIO.output(self.Motor2E,GPIO.HIGH)
-
+        elif movementDir == 'b':
+            GPIO.output(self.Motor1A,GPIO.LOW)
+            GPIO.output(self.Motor1B,GPIO.HIGH)
+            GPIO.output(self.Motor1E,GPIO.HIGH)
+        
+            GPIO.output(self.Motor2A,GPIO.LOW)
+            GPIO.output(self.Motor2B,GPIO.HIGH)
+            GPIO.output(self.Motor2E,GPIO.HIGH)
         # Stop
         elif movementDir == 's':
             GPIO.output(self.Motor1E,GPIO.LOW)
