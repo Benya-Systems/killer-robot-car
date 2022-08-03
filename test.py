@@ -9,13 +9,15 @@ import model.detector
 import utils.utils
 from move import Mover
 
-def getDirectionLetter(dirLeft,dirRight,dirForward):
+def getDirectionLetter(dirLeft,dirRight,dirForward, dirBack):
         if dirLeft:
             return 'l'
         if dirForward:
             return 'f'
         if dirRight:
             return 'r'
+        if dirBack:
+            return 'b'
         
         return 's'
                 
@@ -51,17 +53,28 @@ if __name__ == '__main__':
 
     # Capture video through webcam
     cap = cv2.VideoCapture(0)
-    time.sleep(1)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
+    #time.sleep(1)
+    cap.set(3, 180)
+    cap.set(4, 360)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
     mover=Mover()
   
-    dirLeft,dirRight,dirForward=False,False,False
+    dirLeft, dirRight, dirForward, dirBack=False, False, False, False
     directionLetter='s'
+    
+    
+    start_time = time.time()
+    x = 1 # displays the frame rate every 1 second
+    counter = 0
     try:
         while True:
             print('-----------------------------------------------------')
-            
+            counter+=1
+            if (time.time() - start_time) > x :
+                print("FPS: ", counter / (time.time() - start_time))
+                counter = 0
+                start_time = time.time()
             ret, ori_img = cap.read()
             if ori_img is None:
                 continue
@@ -85,7 +98,7 @@ if __name__ == '__main__':
             centerXpoints = []
             
             left = int(w/3) #427
-            right = int((2*w)/4)#mid =853
+            right = int((2*w)/3)#mid =853
             #right = 1280
             for box in output_boxes[0]:
                 box = box.tolist()
@@ -124,17 +137,17 @@ if __name__ == '__main__':
                 maxArea = max(BAreas)
                 maxAreaindex = BAreas.index(maxArea)
                 centerX = centerXpoints[maxAreaindex]
-                
+                print(f"maxArea: {maxArea}\n")                
                 dirLeft = (centerX < left)
-                dirForward =(centerX <= right and centerX >= left)
+                dirForward =(centerX <= right and centerX >= left and maxArea < 100000)
                 dirRight = (centerX > right )#and centerX < right)
-                  
-            directionLetter=getDirectionLetter(dirLeft,dirRight,dirForward)
+                dirBack = (maxArea > 200000 and centerX <= right and centerX >= left)
+            directionLetter=getDirectionLetter(dirLeft,dirRight,dirForward, dirBack)
             mover.move(directionLetter)
        
                 
                 
-            print(f"dirLeft: {dirLeft}\ndirRight: {dirRight}\ndirForward: {dirForward}")        
+            print(f"dirLeft: {dirLeft}\ndirRight: {dirRight}\ndirForward: {dirForward}\ndirBack: {dirBack}")        
            
             
           #  time.sleep(1)
