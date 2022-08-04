@@ -7,7 +7,11 @@ import numpy
 import torch
 import model.detector
 import utils.utils
-from move import Mover
+import time
+import socket
+
+
+# from move import Mover
 
 def getDirectionLetter(dirLeft,dirRight,dirForward, dirBack):
         if dirLeft:
@@ -36,14 +40,23 @@ if __name__ == '__main__':
 
     opt = parser.parse_args()
     cfg = utils.utils.load_datafile(opt.data)
-    # print("cfg:", cfg)
-    # exit(0)
+    
+    host = '192.168.217.38'
+    port = 5002  # initiate port no above 1024
+
+    server_socket = socket.socket()  # get instance
+    server_socket.bind((host, port))  # bind host address and port together
+    server_socket.listen(2)
+    conn=None
+    # conn, address = server_socket.accept()  # accept new connection
+
     assert os.path.exists(opt.weights), "Please specify the correct model path"
     assert os.path.exists(
         opt.img), "Please specify the correct test image path"
 
     # Load model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     model = model.detector.Detector(
         cfg["classes"], cfg["anchor_num"], True).to(device)
     model.load_state_dict(torch.load(opt.weights, map_location=device))
@@ -52,13 +65,10 @@ if __name__ == '__main__':
     model.eval()
 
     # Capture video through webcam
-    cap = cv2.VideoCapture(0)
-    #time.sleep(1)
-    cap.set(3, 180)
-    cap.set(4, 360)
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
-    mover=Mover()
+    cap = cv2.VideoCapture(2)
+
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 800)
   
     dirLeft, dirRight, dirForward, dirBack=False, False, False, False
     directionLetter='s'
@@ -71,13 +81,17 @@ if __name__ == '__main__':
         while True:
             print('-----------------------------------------------------')
             counter+=1
+            fps=0
             if (time.time() - start_time) > x :
-                print("FPS: ", counter / (time.time() - start_time))
+                fps= counter / (time.time() - start_time)
                 counter = 0
                 start_time = time.time()
+            
             ret, ori_img = cap.read()
             if ori_img is None:
                 continue
+            #draw fps
+            cv2.putText(ori_img, "FPS: " + str(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             res_img = cv2.resize(
                 ori_img, (cfg["width"], cfg["height"]), interpolation=cv2.INTER_LINEAR)
             img = res_img.reshape(1, cfg["height"], cfg["width"], 3)
@@ -143,9 +157,11 @@ if __name__ == '__main__':
                 dirRight = (centerX > right )#and centerX < right)
                 dirBack = (maxArea > 200000 and centerX <= right and centerX >= left)
             directionLetter=getDirectionLetter(dirLeft,dirRight,dirForward, dirBack)
-            mover.move(directionLetter)
+            # mover.move(directionLetter)
        
-                
+
+            if(conn):
+                conn.send(directionLetter.encode())
                 
             print(f"dirLeft: {dirLeft}\ndirRight: {dirRight}\ndirForward: {dirForward}\ndirBack: {dirBack}")        
            
@@ -158,4 +174,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
             cap.release()
             cv2.destroyAllWindows()
-            mover.destroyGPIOPins()
+            # mover.destroyGPIOPins()
