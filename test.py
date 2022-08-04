@@ -42,13 +42,13 @@ if __name__ == '__main__':
     cfg = utils.utils.load_datafile(opt.data)
     
     host = '192.168.217.38'
-    port = 5002  # initiate port no above 1024
+    port = 5004  # initiate port no above 1024
 
     server_socket = socket.socket()  # get instance
     server_socket.bind((host, port))  # bind host address and port together
     server_socket.listen(2)
     conn=None
-    # conn, address = server_socket.accept()  # accept new connection
+    conn, address = server_socket.accept()  # accept new connection
 
     assert os.path.exists(opt.weights), "Please specify the correct model path"
     assert os.path.exists(
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     counter = 0
     try:
         while True:
-            print('-----------------------------------------------------')
+            # print('-----------------------------------------------------')
             counter+=1
             fps=0
             if (time.time() - start_time) > x :
@@ -90,6 +90,7 @@ if __name__ == '__main__':
             ret, ori_img = cap.read()
             if ori_img is None:
                 continue
+            # time.sleep(0.1)
             #draw fps
             cv2.putText(ori_img, "FPS: " + str(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             res_img = cv2.resize(
@@ -136,12 +137,12 @@ if __name__ == '__main__':
                 #print("category ,x1, y1, x2, y2:", category, x1, y1, x2, y2)
                 #print("BArea: ", BArea)
 
-                cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
+                    cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
 
-                cv2.putText(ori_img, '%.2f' % obj_score,
-                            (x1, y1 - 5), 0, 0.7, (0, 255, 0), 2)
-                cv2.putText(ori_img, category, (x1, y1 - 25),
-                            0, 0.7, (0, 255, 0), 2)
+                    cv2.putText(ori_img, '%.2f' % obj_score,
+                                (x1, y1 - 5), 0, 0.7, (0, 255, 0), 2)
+                    cv2.putText(ori_img, category, (x1, y1 - 25),
+                                0, 0.7, (0, 255, 0), 2)
             #print("BAreas:", BAreas)
             
 
@@ -158,12 +159,12 @@ if __name__ == '__main__':
                 dirBack = (maxArea > 200000 and centerX <= right and centerX >= left)
             directionLetter=getDirectionLetter(dirLeft,dirRight,dirForward, dirBack)
             # mover.move(directionLetter)
-       
 
-            if(conn):
+            print("Sending letter: ",directionLetter)
+            if(conn is not None):
                 conn.send(directionLetter.encode())
                 
-            print(f"dirLeft: {dirLeft}\ndirRight: {dirRight}\ndirForward: {dirForward}\ndirBack: {dirBack}")        
+            print(f"dirLeft: {dirLeft}\ndirRight: {dirRight}\ndirForward: {dirForward}\ndirBack: {dirBack}\n\n")        
            
             
           #  time.sleep(1)
@@ -174,4 +175,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
             cap.release()
             cv2.destroyAllWindows()
+            conn.close()
             # mover.destroyGPIOPins()
