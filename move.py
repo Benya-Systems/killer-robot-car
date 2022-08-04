@@ -1,13 +1,15 @@
 import RPi.GPIO as GPIO
-
-
 from time import sleep
+import socket
 
-
+from openCam import Camera
+import cv2 
+    
+    
 class Mover:
         
     def __init__(self):
-        
+
         # Pins for Motor Driver Inputs 
         self.Motor1A = 22
         self.Motor1B = 27
@@ -119,11 +121,37 @@ class Mover:
     def destroyGPIOPins(self):  
         GPIO.cleanup()
 
-# 
-# if __name__ == '__main__':     # Program start from here
-#     setup()
-#     try:
-#             loop()
-#     except KeyboardInterrupt:
-#         destroy()
 
+
+if __name__ == '__main__':
+   
+    mover=Mover()
+    # camera=Camera(-1)
+    
+    host = '192.168.217.38'  # as both code is running on same pc
+    port = 5004  # socket server port number
+
+    client_socket = socket.socket()  # instantiate
+    client_socket.connect((host, port))  # connect to the server
+    print("Coneccted!")
+  
+    try:
+        while (True):
+            # ret,frame=camera.get_frame()
+            # if(frame is None):
+            #     continue
+            
+    #         client_socket.send(message.encode())  # send message
+            dirLetter = client_socket.recv(1024).decode()  # receive response
+            mover.move(dirLetter)
+
+            print('Received from server: ' + dirLetter)  # show in terminal
+            # cv2.imshow('frame',frame)
+            # k= cv2.waitKey(1)
+            # if(k == 27):
+            #     break
+
+    except KeyboardInterrupt:
+        mover.destroyGPIOPins()
+
+    client_socket.close()  # close the connection
